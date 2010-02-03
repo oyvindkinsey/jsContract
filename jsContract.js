@@ -136,7 +136,7 @@ Contract = (function(){
          * The expression used to match named and anonymous functions.
          *  This does not match functions with names staring with a capital as we cannot enforse postconditions on classes.
          */
-        reFunction: /(\sfunction\()|(function\s[_a-z0-9]\w+\()/,
+        reFunction: /\bfunction\b\s?[_a-z0-9]*\s?\(/,
         /**
          * This matches statement lines starting with 'Contract.*' and followed by '();'(*);' and '(function(result){});'
          */
@@ -145,6 +145,9 @@ Contract = (function(){
          * This mathces the signature of the method eg '()' or '(a,b,c)'.
          */
         reSignature: /\(.*\)/,
+		maskComments:function(){
+			
+		},
         /**
          * This method returns the next complete block.
          * A block is determined by an equal amount of { and }.
