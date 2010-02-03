@@ -1,0 +1,119 @@
+<!doctype HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>jsContract</title>
+        <script type="text/javascript" src="jsContract.js">
+        </script>
+    </head>
+    <body>
+        <h1>jsContract</h1>
+        jsContract is a tool for implementing code contracts in Javascript.
+        <br/>
+        Code contracts are implemented as a series of statements in the head of each function supporting both pre- and postconditions. 
+        <code>
+            <pre>
+	myFunction(a,b,c) {
+		Contract.expectNumber(a,"a is not a number");
+		Contract.guaranteesString("The result was not a string");
+</pre>
+        </code>
+        To support postconditions one has to instrument the script (rewrite it) using a call to 
+        <code>
+            Contract.instrument
+        </code>, such as
+        <code>
+            <pre>
+	var script = ".......";
+	var instrumented = Contract.instrument(script);
+</pre>
+        </code>
+        One can also use the Contract framework to asynchronously load and instrument files using 
+        <code>
+            Contract.load
+        </code>
+        <code>
+            <pre>
+	Contract.load("myscript.js",true,function(){
+		useCode();
+	});
+</pre>
+        </code>
+        In the left textbox you will find an example of a class that is set up with code contracts.
+        <br/>
+        When run this code will only execute the 
+        <code>
+            precondition
+        </code>
+        statements, since the return values are not yet availabe.
+        <br/>
+        To see the instrumented code press the button.
+        <br/>
+        <button onclick="document.getElementById('output').value=Contract.instrument(document.getElementById('input').value);">
+            Instrument
+        </button>
+        <br/>
+        To see the regular and instrumented code in action, take a look at <a href="test.html">test.html</a>
+        <br/>
+        <textarea id="input" style="width:40%;height:200px">
+            /*jslint evil: true, browser: true, immed: true, passfail: true, undef: true, newcap: true*/
+            /*global Contract */
+            /**
+            * @class MyClass
+            * A class that performs some simple operations
+            * @constructor
+            * @param {Object} config The class configuration
+            * @cfg {String} mode The mode of operation, can ba either "divide" or "multiply"
+            */
+            function MyClass(config){
+            Contract.expectObject(config, "No configuration supplied");
+            Contract.expectString(config.mode, "No mode set");
+            Contract.expectValue(config.mode, ["divide", "multiply"], "Invalid mode");
+            /**
+            * This either divides or multiplies the two numbers
+            * @param {Number} a
+            * @param {Number} b
+            * @return {Number} The result of the operation
+            * @private
+            */
+            function _internalMethod(a, b){
+            Contract.expectNumber(a);
+            Contract.expectNumber(b);
+            Contract.expectWhen(config.mode === "divide", b > 0, "Divisor cannot be 0");
+            Contract.expectWhen(config.mode === "multiply", a > 0 && b > 0, "The multiplicands cannot be 0");
+            Contract.guaranteesNumber();
+            Contract.guarantees(function(result){
+            return result > 0;
+            }, "Result must be > 0");
+            if (config.mode == "divide") {
+            return a / b;
+            }
+            // At this point config.mode must be "multiply"
+            return a * b;
+            }
+            return {
+            /**
+            * This first adds a and b, and then performs the configured operation on the result and c.
+            * @param {Number} a The first number to be added
+            * @param {Number} b The second number to be added
+            * @param {Number} c The number the result of
+            <code>
+                a + b
+            </code>
+            should be divided or multiplied with.
+            */
+            publicMethod: function(a, b, c){
+            Contract.expectNumber(a);
+            Contract.expectNumber(b);
+            Contract.expectNumber(c);
+            Contract.expect(a >= 0 && b >= 0 && c >= 0, "Only positive numbers are allowed");
+            var d = a + b;
+            return _internalMethod(d, c);
+            }
+            };
+            }
+        </textarea>
+        <textarea id="output" style="width:40%;height:200px">
+        </textarea>
+    </body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>jsContract</title>
+        <script type="text/javascript" src="jsContract.js">
+        </script>
+        <script type="text/javascript" src="test.js">
+        </script>
+    </head>
+    <body>
+        <h1>jsContract</h1>
+		The following script is loaded on this page
+		<pre><code>
+	var instrument = (location.search && location.search.indexOf("instrument=true") !== -1);
+	Contract.load("MyClass.js", instrument, function(){
+	    try {
+	        var myClass = new MyClass({
+	            mode: "multiply"
+	        });
+	        
+	        var result = myClass.publicMethod(34, 5, 3);
+	    } 
+	    catch (ex) {
+	        alert(ex.message);
+	    }
+	});			
+		</code></pre>
+		When run without instrumentation this will not create any exceptions, but when run <b>with</b> instrumentation an erroneous <code>postcondition</code> will come into play. <br/>
+		The offending code is 
+		<code><pre>
+	Contract.guarantees(function(result){
+	    return result === 0;
+	}, "Result must be > 0");
+		</pre></code>
+        <button onclick="location.href=location.pathname+'?instrument=false';">
+            Load without instrumentation
+        </button>
+        <button onclick="location.href=location.pathname+'?instrument=true';">
+            Load with instrumentation
+        </button>
+    </body>
+</html>
