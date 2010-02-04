@@ -164,28 +164,17 @@ Contract = (function(){
                         closing++;
                         end = currentPos;
                         break;
-                    case "/":
+                    default:
                         if (prevC === "/") {
-                            next = this.input.substring(currentPos);
-                            m = /$/m.exec(next);
-                            if (m) {
-                                currentPos += m.index;
-                                prevC = "";
-                                continue;
+                            // If we have entered a comment we just skips ahead to the end of it
+                            // This way we the parser is not confused by { and } placed in a comment
+                            if (c === "/") {
+                                currentPos += /$/m.exec(this.input.substring(currentPos)).index;
+                            }
+                            if (c === "*") {
+                                currentPos += /\*\//.exec(this.input.substring(currentPos)).index;
                             }
                         }
-                        break;
-                    case "*":
-                        if (prevC === "/") {
-                            next = this.input.substring(currentPos);
-                            m = /\*\//.exec(next);
-                            if (m) {
-                                currentPos += m.index;
-                                prevC = "";
-                                continue;
-                            }
-                        }
-                        break;
                 }
                 prevC = c;
                 currentPos++;
@@ -193,8 +182,7 @@ Contract = (function(){
             if (end === 0) {
                 return null;
             }
-            end++;
-            return this.input.substring(this.position, end);
+            return this.input.substring(this.position, ++end);
         },
         /**
          * This method will if necessary rewrite the body to allow for instrumentation.
