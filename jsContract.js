@@ -136,18 +136,11 @@ Contract = (function(){
          * The expression used to match named and anonymous functions.
          *  This does not match functions with names staring with a capital as we cannot enforse postconditions on classes.
          */
-        reFunction: /\bfunction\b\s?[_a-z0-9]*\s?\(/,
-        /**
-         * This matches statement lines starting with 'Contract.*' and followed by '();'(*);' and '(function(result){});'
-         */
-        reStatement: /Contract\.\w+((\(\)\;)|(\(.+\)\;)|(\([\s\S]+?\)\;))[\s\S]/,
+        reFunction: /\bfunction\b\s?[_$a-zA-Z0-9]*\s?\(/,
         /**
          * This mathces the signature of the method eg '()' or '(a,b,c)'.
          */
         reSignature: /\(.*\)/,
-		maskComments:function(){
-			
-		},
         /**
          * This method returns the next complete block.
          * A block is determined by an equal amount of { and }.
@@ -192,12 +185,17 @@ Contract = (function(){
             body = body.substring(/^[\w\s].+/m.exec(body).index, body.lastIndexOf("}"));
             
             //Move Contract.* statements into the pre- and postblock
-            while ((m = this.reStatement.exec(body))) {
+            while (true) {
+                // Read next line
+                m = /^.*$/m.exec(body);
                 statement = m[0];
+                if (!/Contract\./.test(statement)) {
+                    break;
+                }
                 if (/Contract\.expect/.test(statement)) {
                     // A precondition
-                    preBlock += statement;
-                    body = body.substring(m.index + statement.length);
+                    preBlock += statement + "\n";
+                    body = body.substring(m.index + statement.length + 1);
                     continue;
                 }
                 if (/Contract\.guarantees/.test(statement)) {
@@ -207,8 +205,6 @@ Contract = (function(){
                     body = body.substring(m.index + statement.length);
                     continue;
                 }
-                // As soon as we hit a statement that doesn't match we break 
-                break;
             }
             
             if (doRewrite) {
@@ -234,6 +230,7 @@ Contract = (function(){
         iterate: function(){
             var oldBody, newBody;
             var string = (this.position === 0) ? this.input : this.input.substring(this.position);
+            
             var m = this.reFunction.exec(string);
             if (m) {
                 //move the caret to the next function
@@ -243,7 +240,7 @@ Contract = (function(){
                     //Update the input
                     this.input = this.input.substring(0, this.position) + newBody + this.input.substring(this.position + oldBody.length);
                     //move the caret past the end
-                    this.position += newBody.indexOf("postconditions");
+                    this.position += newBody.indexOf("/*postconditions*/");
                 }
                 else {
                     this.position += 1; //to skip past the match
