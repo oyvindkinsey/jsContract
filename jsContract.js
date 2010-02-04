@@ -141,6 +141,8 @@ Contract = (function(){
          * This mathces the signature of the method eg '()' or '(a,b,c)'.
          */
         reSignature: /\(.*\)/,
+        reCommentSingle: /\/\/.*$/m,
+        reCommentMulti: /\/\*\*[\s\S]*?\*\//m,
         /**
          * This method returns the next complete block.
          * A block is determined by an equal amount of { and }.
@@ -148,7 +150,7 @@ Contract = (function(){
          */
         getBlock: function(){
             var opening = 0, closing = 0, currentPos = this.position, c, l = this.input.length;
-            var start = -1, end = 0;
+            var start = -1, end = 0, prevC;
             while ((opening === 0 || opening > closing) && currentPos < l) {
                 c = this.input.substring(currentPos, currentPos + 1);
                 switch (c) {
@@ -162,7 +164,30 @@ Contract = (function(){
                         closing++;
                         end = currentPos;
                         break;
+                    case "/":
+                        if (prevC === "/") {
+                            next = this.input.substring(currentPos);
+                            m = /$/m.exec(next);
+                            if (m) {
+                                currentPos += m.index;
+                                prevC = "";
+                                continue;
+                            }
+                        }
+                        break;
+                    case "*":
+                        if (prevC === "/") {
+                            next = this.input.substring(currentPos);
+                            m = /\*\//.exec(next);
+                            if (m) {
+                                currentPos += m.index;
+                                prevC = "";
+                                continue;
+                            }
+                        }
+                        break;
                 }
+                prevC = c;
                 currentPos++;
             }
             if (end === 0) {
