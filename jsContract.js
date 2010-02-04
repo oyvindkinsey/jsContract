@@ -252,13 +252,13 @@ Contract = (function(){
             var m = this.reFunction.exec(string);
             if (m) {
                 if (/\/\//.test(m[0])) {
-					// This is commented using //, lets skip to the end
+                    // This is commented using //, lets skip to the end
                     this.position += (m.index + m[0].length);
                     return;
                 }
                 if (/^\s*(\*[^\/])|(\/\*\*)/m.test(m[0])) {
                     // this is part of a multiline comment, lets skip to the end of the comment
-                    this.position += (m[0].length + /\*\//.exec(this.input.substring(m.index)).index + 2);
+                    this.position += /\*\//.exec(string.substring(m.index)).index + 2;
                     return;
                 }
                 //move the caret to the next function
