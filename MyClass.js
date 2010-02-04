@@ -11,8 +11,8 @@ function MyClass(config){
     Contract.expectObject(config, "No configuration supplied");
     Contract.expectString(config.mode, "No mode set");
     Contract.expectValue(config.mode, ["divide", "multiply"], "Invalid mode");
-    /**
-     * This either divides or multiplies the two numbers
+    /** test: this function(){} will not be parsed
+     * This either divides or multiplies the two numbers test: this function(){} will not be parsed
      * @param {Number} a
      * @param {Number} b
      * @return {Number} The result of the operation
@@ -34,6 +34,9 @@ function MyClass(config){
         // At this point config.mode must be "multiply"
         return a * b;
     }
+	
+	// test: this function(){} will not be parsed
+	
     return {
         /**
          * This first adds a and b, and then performs the configured operation on the result and c.
