@@ -1,0 +1,111 @@
+<!doctype HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>jsContract</title>
+        <script type="text/javascript" src="jsContract.js">
+        </script>
+        <script type="text/javascript">
+            function run(instrumented, code){
+                if (instrumented) {
+                    code = Contract.instrument(code);
+                }
+                eval(code);
+            }
+        </script>
+    </head>
+    <body>
+        <h1>jsContract</h1>
+        Two pieces of code is shown here, one with code contracts and one without. <br/>
+		Both pieces of code look correct right? And when you run the regular code, you DO get a result right? And there is no errors thrown, right?<br/>
+		But is the produced result correct???<br/><br/>
+		Try the different samples and see if you can spot the bug!<br/>
+        Number of fibonacci nubers to compute <input type="text" value="10" id="length"/> 5 more numbers will be added in code.
+        <br/>
+        <textarea id="code1" style="width:49%;height:400px">
+function fibonacci(length){
+    //Copied from http://sonic.net/~douglasi/fibo.htm
+    //Script by Doug McKenzie email: douglasi@sonic.net
+    //Use as you wish but leave the above line in place, thanks.
+    //Modified by Øyvind Sean Kinsey for use as an example
+    var results = [0, 1];
+    //we actually want to add an extra 5 numbers to this
+    length = length + 5;
+    var n = 0;
+    var x = 1;
+    var i = 0;
+    for (n = 1; n <
+    length; n++) {
+        x = x + i;
+        i = x - i;
+        results.push(x)
+    }
+    return results;
+}
+
+function getLength(){
+    return document.getElementById("length").value;
+}
+
+function doComputation(length){
+    var result = fibonacci(length);
+    alert(result.join());
+}
+
+doComputation(getLength());
+
+        </textarea>
+		
+        <textarea id="code2" style="width:49%;height:400px">
+function fibonacci(length){
+    Contract.expectNumber(length);
+    Contract.expect(length < 100);
+    //Copied from http://sonic.net/~douglasi/fibo.htm
+    //Script by Doug McKenzie email: douglasi@sonic.net
+    //Use as you wish but leave the above line in place, thanks.
+    //Modified by Øyvind Sean Kinsey for use as an example
+    var results = [0, 1];
+    //we actually want to add an extra 5 numbers to this
+    length = length + 5;
+    var n = 0;
+    var x = 1;
+    var i = 0;
+    for (n = 1; n <
+    length; n++) {
+        x = x + i;
+        i = x - i;
+        results.push(x)
+    }
+    return results;
+}
+
+function getLength(){
+    Contract.guaranteesNumber("the value from the input field was not a number");
+    return document.getElementById("length").value;
+}
+
+function doComputation(length){
+    Contract.expectNumber(length);
+    var result = fibonacci(length);
+    alert(result.join());
+}
+
+try {
+    doComputation(getLength());
+} 
+catch (e) {
+    alert(e.message);
+}
+
+        </textarea>
+        <button onclick="run(false,document.getElementById('code1').value);" style="width:49%">
+            Run
+        </button>
+        <button onclick="run(false,document.getElementById('code2').value);" style="width:24%">
+            Run without instrumenting
+        </button>
+		<button onclick="run(true,document.getElementById('code2').value);" style="width:24%">
+            Run with instrumention
+        </button>
+    </body>
+</html>
