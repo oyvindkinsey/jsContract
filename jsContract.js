@@ -136,13 +136,13 @@ Contract = (function(){
          * The expression used to match named and anonymous functions.
          *  This does not match functions with names staring with a capital as we cannot enforse postconditions on classes.
          */
-        reFunction: /\bfunction\b\s?[_$a-zA-Z0-9]*\s?\(/,
+        reFunction: /\bfunction\b\s?[_$a-zA-Z0-9]*\(/,
+        reLine: /^.+$/m,
+        reStatement: /Contract\.\w+((\(\)\;)|(\(.+\)\;)|(\([\s\S]+?\)\;))[\s\S]/,
         /**
          * This mathces the signature of the method eg '()' or '(a,b,c)'.
          */
         reSignature: /\(.*\)/,
-        reCommentSingle: /\/\/.*$/m,
-        reCommentMulti: /\/\*\*[\s\S]*?\*\//m,
         /**
          * This method returns the next complete block.
          * A block is determined by an equal amount of { and }.
@@ -207,19 +207,22 @@ Contract = (function(){
             var m = this.reSignature.exec(body), fnSignature = m[0], fnIdentifier = body.substring(0, m.index);
             // Trim the body
             body = body.substring(fnSignature.length + fnIdentifier.length);
-            body = body.substring(/^[\w\s].+/m.exec(body).index, body.lastIndexOf("}"));
+            body = body.substring(/^[\w\s].+$/m.exec(body).index, body.lastIndexOf("}"));
             
             //Move Contract.* statements into the pre- and postblock
             while (true) {
                 // Read next line
-                m = /^.*$/m.exec(body);
+                m = this.reLine.exec(body);
                 statement = m[0];
                 if (!/Contract\./.test(statement)) {
                     break;
                 }
+                //get full statement
+                m = this.reStatement.exec(body);
+                statement = m[0]
                 if (/Contract\.expect/.test(statement)) {
                     // A precondition
-                    preBlock += statement + "\n";
+                    preBlock += statement;
                     body = body.substring(m.index + statement.length + 1);
                     continue;
                 }
@@ -235,19 +238,22 @@ Contract = (function(){
             if (doRewrite) {
                 return fnIdentifier + fnSignature + "{\n" +
                 "arguments.callee.isInstrumented = true;\n" +
-                "/*preconditions*/\n" +
+                "/*@preconditions@*/\n" +
                 preBlock +
-                "var __return = (function" +
+                "/*@end preconditions@*/\nvar __return = (function" +
                 fnSignature +
-                "{" +
+                "{\n/*@original@*/" +
                 body +
                 "}" +
                 fnSignature +
-                ");\n/*postconditions*/\n" +
+                ");\n/*@postconditions@*/\n" +
                 postBlock +
-                "return __return;\n}";
+                "\n/*@end postconditions@*/\nreturn __return;\n}";
             }
-            return null;
+            return fnIdentifier + fnSignature +
+            "{\n/*@original@*/\n" +
+            body +
+            "}";
         },
         /**
          * This method iterates over the body until either there is no more functions or the end is reached.
@@ -255,20 +261,20 @@ Contract = (function(){
         iterate: function(){
             var oldBody, newBody;
             var string = (this.position === 0) ? this.input : this.input.substring(this.position);
-            
             var m = this.reFunction.exec(string);
             if (m) {
                 //move the caret to the next function
                 this.position += m.index;
                 oldBody = this.getBlock();
-                if (oldBody && (newBody = this.addInstrumentation(oldBody))) {
+                if (oldBody) {
+                    newBody = this.addInstrumentation(oldBody)
                     //Update the input
                     this.input = this.input.substring(0, this.position) + newBody + this.input.substring(this.position + oldBody.length);
                     //move the caret past the end
-                    this.position += newBody.indexOf("/*postconditions*/");
+                    this.position += newBody.indexOf("/*@original@*/");
                 }
                 else {
-                    this.position += 1; //to skip past the match
+                    this.position = this.input.length;
                 }
             }
             else {
