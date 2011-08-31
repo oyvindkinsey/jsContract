@@ -15,3 +15,7 @@ One can also use the Contract framework to asynchronously load and instrument fi
 	Contract.load("myscript.js",true,function(){
 		useCode();
 	});
+
+
+The  library is shared under the MIT-license.
+http://www.opensource.org/licenses/mit-license.php
