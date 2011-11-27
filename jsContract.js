@@ -58,6 +58,9 @@ Contract = (function(){
     function expectObject(arg, msg){
         expectType(arg, "object", msg);
     }
+    function expectFunction(arg, msg){
+        expectType(arg, "function", msg);
+    }
     function expectNumber(arg, msg){
         expectType(arg, "number", msg);
     }
@@ -352,6 +355,7 @@ Contract = (function(){
         expectString: expectString,
         expectRegExp: expectRegExp,
         expectValue: expectValue,
+        expectFunction: expectFunction,
         
         guarantees: guarantees,
         guaranteesObject: guaranteesObject,
